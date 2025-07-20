@@ -14,10 +14,7 @@ import org.jboss.resteasy.reactive.server.multipart.FormValue
 import org.jboss.resteasy.reactive.server.multipart.MultipartFormDataInput
 
 import java.nio.file.Files
-import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.stream.Collectors
-
 
 @EndpointPath("/hello")
 class Hello {
@@ -38,17 +35,17 @@ class UploadEndpoint {
     @POST
     Response upload(MultipartFormDataInput input) {
 
-        var metadata = metaDataIfNotFile(input.getValues())
+        var metadata = metaDataIfNotFile(input.values)
 
-        input.getValues().entrySet().stream()
-                .filter {it.getValue().stream().anyMatch {it.isFileItem()}}
-                .map {tryData(it, metadata)}
-                .filter {it.present}
-                .forEach { write(it.get()) }
+        var files = extractFiles(input.values, metadata)
+
+        files
+            .forEach { write(it) }
 
         Response.status(201).entity(metadata).build()
 
     }
+
 
     def write(DataItem data) {
         var uploads = Paths.get("./my-uploads")
@@ -66,27 +63,37 @@ class UploadEndpoint {
 
     static def metaDataIfNotFile(Map<String, Collection<FormValue>> formData) {
         formData
-            .findAll { it.getValue().every { !it.fileItem } }
+            .findAll { it.value.every { !it.fileItem } }
             .collectEntries { k,  formValues ->
                 [ (k): formValues.collect { it.value } ] }
     }
 
-    def tryData(Map.Entry<String, Collection<FormValue>> entry, meta) {
+
+    def extractFiles(Map<String, Collection<FormValue>> values, metadata) {
+            values
+                .findAll { it.value.find { it.fileItem } }
+                .collectMany { extractData(it, metadata) }
+    }
+
+    def extractData(Map.Entry<String, Collection<FormValue>> entry, meta) {
+            entry.value
+                .findAll { it.fileItem && it.fileName?.trim() }
+                .collectMany { tryData(it, meta) }
+    }
+
+    def tryData(FormValue formValue, meta) {
         try {
-            return entry.getValue().stream()
-                .filter{ it.fileItem && it.getFileName()?.trim() }
-                .findFirst()
-                .map {
-                    [
-                     data: Files.readAllBytes(it.getFileItem().getFile()),
-                     filename: it.getFileName(),
-                     metaData: meta
-                    ] as DataItem
-                }
+            [
+                [
+                    data    : Files.readAllBytes(formValue.getFileItem().file),
+                    filename: formValue.fileName,
+                    metaData: meta
+                ] as DataItem
+            ]
         } catch (e) {
             e.printStackTrace()
+           []
         }
-        Optional.empty()
     }
 }
 
