@@ -38,11 +38,7 @@ class UploadEndpoint {
     @POST
     Response upload(MultipartFormDataInput input) {
 
-        var metadata = input.getValues().entrySet().stream()
-                .map(this::metaDataIfNotFile)
-                .filter { it.present }
-                .map { it.get() }
-                .collect(Collectors.toMap({it.first()}, {it.last()}))
+        var metadata = metaDataIfNotFile(input.getValues())
 
         input.getValues().entrySet().stream()
                 .filter {it.getValue().stream().anyMatch {it.isFileItem()}}
@@ -68,18 +64,11 @@ class UploadEndpoint {
     }
 
 
-    def metaDataIfNotFile(entry) {
-        try {
-            var values = entry.getValue().stream().filter {
-                !it.isFileItem()
-            }.map {
-                it.getValue()
-            }.findFirst()
-            values.collect { [entry.getKey(), it] }
-        } catch (e) {
-            e.printStackTrace()
-            []
-        }
+    static def metaDataIfNotFile(Map<String, Collection<FormValue>> formData) {
+        formData
+            .findAll { it.getValue().every { !it.fileItem } }
+            .collectEntries { k,  formValues ->
+                [ (k): formValues.collect { it.value } ] }
     }
 
     def tryData(Map.Entry<String, Collection<FormValue>> entry, meta) {
@@ -105,5 +94,5 @@ class UploadEndpoint {
 class DataItem {
     byte[] data
     String filename
-    Map<String, String> metaData
+    Map<String, Collection<String>> metaData
 }
