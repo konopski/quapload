@@ -8,24 +8,20 @@
     <artifactId>quapload</artifactId>
     <version>0.0.1</version>
 
-    <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.6</version>
-        <relativePath/>
-    </parent>
-
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <compiler-plugin.version>3.14.0</compiler-plugin.version>
-        
+
         <quarkus.platform.artifactId>quarkus-bom</quarkus.platform.artifactId>
         <quarkus.platform.groupId>io.quarkus.platform</quarkus.platform.groupId>
         <quarkus.platform.version>3.22.3</quarkus.platform.version>
         <skipITs>true</skipITs>
 
+        <groovy.version>4.0.24</groovy.version>
+        <gmavenplus-plugin.version>1.13.1</gmavenplus-plugin.version>
+        <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -41,10 +37,11 @@
     </dependencyManagement>
 
     <dependencies>
-        
+
         <dependency>
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy</artifactId>
+            <version>${groovy.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -98,6 +95,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin.version}</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                     <useDefaultDelimiters>true</useDefaultDelimiters>
@@ -106,7 +104,7 @@
             <plugin>
 				<groupId>org.codehaus.gmavenplus</groupId>
 				<artifactId>gmavenplus-plugin</artifactId>
-				<version>1.13.1</version>
+				<version>${gmavenplus-plugin.version}</version>
 				<executions>
 					<execution>
 						<goals>
